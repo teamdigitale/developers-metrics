@@ -1,16 +1,23 @@
 require('dotenv').config();
 
-import statsd from 'statsd-client';
+import StatsD from 'statsd-client';
 
-const { HOST, PORT, PREFIX, NODE_ENV } = process.env;
+import { github } from './services';
 
-const client = new statsd({
-  'host'  : HOST,
-  'port'  : PORT,
-  'prefix': PREFIX,
+const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
+const { NODE_ENV } = process.env;
+
+const statsd = new StatsD({
+  'host'  : STATSD_HOST,
+  'port'  : STATSD_PORT,
+  'prefix': STATSD_PREFIX,
   'debug' : NODE_ENV === 'development',
 });
 
-client.set('developers', 35);
+github.getReposData().then((data) => {
+  Object.keys(data).map((key) => {
+    statsd.gauge(key, data[key]);
 
-client.close();
+    statsd.close();
+  })
+});
