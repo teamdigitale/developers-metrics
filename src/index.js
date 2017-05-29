@@ -2,7 +2,7 @@ require('dotenv').config();
 
 import StatsD from 'statsd-client';
 
-import { github, discourse } from './services';
+import { github, discourse, mailup } from './services';
 
 const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
 const { NODE_ENV } = process.env;
@@ -23,11 +23,16 @@ Promise.all([
     }),
   discourse.getForumData()
     .then((data) => {
-      console.log(data);
       Object.keys(data).map((key) => {
         statsd.gauge(key, data[key]);
       });
-    })
+    }),
+  mailup.getMailData()
+    .then((data) => {
+      Object.keys(data).map((key) => {
+        statsd.gauge(key, data[key]);
+      });
+    }),
 ])
   .then(() => {
     statsd.close();
