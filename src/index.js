@@ -22,19 +22,26 @@ Promise.all([
         statsd.gauge(`${GITHUB_PREFIX}${key}`, data[key]);
       });
     }),
+
   discourse.getForumData()
     .then((data) => {
       Object.keys(data).map((key) => {
         statsd.gauge(`${DISCOURSE_PREFIX}${key}`, data[key]);
       });
     }),
+
   mailup.getMailData()
     .then((data) => {
       Object.keys(data).map((key) => {
         statsd.gauge(`${MAILUP_PREFIX}${key}`, data[key]);
       });
     }),
+
 ])
   .then(() => {
     statsd.close();
-  });
+  })
+  .catch((err) => {
+    console.error(`An error occurred: ${err}`);
+    statsd.close();
+  })
