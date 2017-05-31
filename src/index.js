@@ -9,11 +9,13 @@ const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
 const { GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX } = process.env;
 const { NODE_ENV } = process.env;
 
+const isDev = (NODE_ENV === 'development');
+
 const statsd = new StatsD({
   'host'  : STATSD_HOST,
   'port'  : STATSD_PORT,
   'prefix': STATSD_PREFIX,
-  'debug' : NODE_ENV === 'development',
+  'debug' : true,
 });
 
 Promise.all([
@@ -41,8 +43,10 @@ Promise.all([
 ])
   .then(() => {
     statsd.close();
+    process.exit();
   })
   .catch((err) => {
     console.error(`An error occurred: ${err}`);
     statsd.close();
-  })
+    process.exit(1);
+  });
