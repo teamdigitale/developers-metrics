@@ -5,30 +5,27 @@ import request from 'request-promise-native';
 import querystring from 'querystring';
 import fs from 'fs';
 
-import { storeRefreshToken, getMailDataWithRefreshToken } from './services/mailup';
+import { mailupAuth, getAccessRefreshToken } from './services/mailup';
 import { githubAuth, getAccessToken } from './services/github';
 
-const { SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
-const { MAILUP_URL } = process.env;
-const MAILUP_ENDPOINT = 'Authorization/OAuth/Token';
+const { SERVER_PORT } = process.env;
 
 const app = express();
 
 app.get('/mailup', (req, res) => {
-  const qs = querystring.stringify({
-    'code'      : req.query.code,
-    'grant_type': 'authorization_code',
-  });
-
-  return request({
-    'method': 'GET',
-    'url'   : `${MAILUP_URL}/${MAILUP_URL}?${qs}`,
-    'json'  : true,
-  })
+  return getAccessRefreshToken({ 'code': req.query.code })
     .then((data) => {
-      res.send(Object.assign(data, {
+      const message = {
         'message': 'paste these codes into `MAILUP_ACCESS_TOKEN` and `MAILUP_REFRESH_TOKEN` in your .env file'
-      }));
+      };
+      const response = Object.assign(data, message);
+      res.send(response);
+
+      return response.message;
+    })
+    .then((message) => {
+      // Exits the local process
+      mailupAuth.reject(message);
     });
 });
 

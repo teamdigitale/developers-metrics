@@ -1,53 +1,58 @@
 require('dotenv').config();
 
 import request from 'request-promise-native';
-import ngrok from 'ngrok';
 import querystring from 'querystring';
 import opn from 'opn';
 import fs from 'fs';
 import bluebird from 'bluebird';
 
-const connect   = bluebird.promisify(ngrok.connect);
 const readFile  = bluebird.promisify(fs.readFile);
 const writeFile = bluebird.promisify(fs.writeFile);
 
 const { MAILUP_URL, MAILUP_CLIENT_ID, MAILUP_CLIENT_SECRET } = process.env;
 const { MAILUP_ACCESS_TOKEN, MAILUP_REFRESH_TOKEN } = process.env;
-const { SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
+const { SERVER_URL, SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
 
 const LOGON_URL   = 'Authorization/OAuth/LogOn';
 const TOKEN_URL   = 'Authorization/OAuth/Token';
 const CONSOLE_URL = 'API/v1.1/Rest/ConsoleService.svc/Console';
 
+const mailupAuth  = Promise.defer();
+
 function checkAuth(endpoint = LOGON_URL) {
   if (!MAILUP_ACCESS_TOKEN || !MAILUP_REFRESH_TOKEN) {
     // No token/refresh pair is found in .env
-    return connect({
-      'proto': 'http',
-      'addr' : SERVER_PORT,
-    })
-      .then((url) => {
-        console.info(`Reverse proxy listening on ${url}`);
+    const qs = querystring.stringify({
+      'response_type' : 'code',
+      'client_id'     : MAILUP_CLIENT_ID,
+      'client_secret' : MAILUP_CLIENT_SECRET,
+      'redirect_uri'  : `${SERVER_URL}/mailup`,
+    });
 
-        const qs = querystring.stringify({
-          'response_type' : 'code',
-          'client_id'     : MAILUP_CLIENT_ID,
-          'client_secret' : MAILUP_CLIENT_SECRET,
-          'redirect_uri'  : `${url}/mailup`,
-        });
+    // Try to open into a Browser
+    opn(`${MAILUP_URL}/${endpoint}?${qs}`);
 
-        // Try to open into a Browser
-        opn(`${MAILUP_URL}/${endpoint}?${qs}`);
+    console.info('Visit this URL in order to obtain your access token:');
+    console.info(`${MAILUP_URL}/${endpoint}?${qs}`);
 
-        console.info('Visit this URL in order to obtain your access token:');
-        console.info(`${MAILUP_URL}/${endpoint}?${qs}`);
-
-        return new Promise().reject();
-      });
+    return mailupAuth.promise;
   } else {
     // token/refresh pair have already been setup in .env
     return getMailDataWithRefreshToken();
   }
+}
+
+function getAccessRefreshToken({ code }) {
+  const qs = querystring.stringify({
+    'code'      : code,
+    'grant_type': 'authorization_code',
+  });
+
+  return request({
+    'method': 'GET',
+    'url'   : `${MAILUP_URL}/${TOKEN_URL}?${qs}`,
+    'json'  : true,
+  });
 }
 
 function refreshToken() {
@@ -154,7 +159,8 @@ function accumulateItemsLength(acc, object) {
 }
 
 module.exports = {
+  mailupAuth,
+  getAccessRefreshToken,
   getMailData,
-  storeRefreshToken,
   getMailDataWithRefreshToken,
 };
