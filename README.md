@@ -45,9 +45,15 @@ $ npm run dev
 $ cp .env.mock .env
 ```
 
-Setup your GitHub token obtained from the [settings page](https://github.com/settings/tokens) into `GITHUB_TOKEN`.
+Setup your GitHub client/secret obtained from the [app page](https://github.com/settings/applications/new) (use `http://127.0.0.1:3000` as `Authorization callback URL`) into `GITHUB_TOKEN`.
 
 Setup your MailUp client/secret obtained from the [developers console](http://help.mailup.com/display/mailupapi/Get+a+Developer+Account) into `MAILUP_CLIENT_ID` and `MAILUP_CLIENT_SECRET`.
+
+#### GitHub access token
+GitHub will require a one-time [authorization code grant](https://developer.github.com/apps/building-integrations/setting-up-and-registering-oauth-apps/about-authorization-options-for-oauth-apps/).
+[Start the Node app](#node) and follow the authorization flow:
+- Authorize the GitHub application from the provided browser window (check the link into the console otherwise)
+- Setup your `GITHUB_ACCESS_TOKEN`
 
 #### MailUp access token
 MailUp will require a one-time [authorization code grant](http://help.mailup.com/display/mailupapi/Authenticating+with+OAuth+v2).
