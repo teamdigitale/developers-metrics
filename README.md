@@ -12,15 +12,17 @@ $ brew install nodenv
 
 ## Development
 
-### Start StatsD
-If you wish to setup a [StatsD](https://github.com/etsy/statsd) instance locally, with [Docker](https://www.docker.com/get-docker) installed, run:
+### Start Telegraf (StatsD), InfluxDB and Grafana
+In order to setup a [StatsD](https://github.com/etsy/statsd) instance locally, with [Docker](https://www.docker.com/get-docker) installed, run:
 
 ```
-$ docker-compose -f docker-compose.dev.yml up
+$ ./docker-run.dev.sh
 ```
 
-[Graphite](https://github.com/graphite-project/graphite-web) will run at `http://localhost:8000`.
-You can check your [dashboard](http://localhost:8000/dashboard) or a [rendered graph](http://localhost:8000/render/?width=586&height=308&target=stats.gauges.contributors).
+[Grafana](https://github.com/grafana/grafana) will run at `http://localhost:3003` (root/root).
+[InfluxDB](https://github.com/influxdata/influxdb) will run at `http://localhost:3004` (root/root);
+You can setup your `InfluxDB` data source into `Grafana` as described [here](https://github.com/samuelebistoletti/docker-statsd-influxdb-grafana#add-data-source-on-grafana).
+You can import the [dashboard](http://localhost:3003/dashboard/db/developers-metrics) by using the provided JSON in `export/developers-metrics.json`.
 
 ### <a name="node"></a> Start the Node app
 
@@ -45,7 +47,7 @@ $ npm run dev
 $ cp .env.mock .env
 ```
 
-Setup your GitHub client/secret obtained from the [app page](https://github.com/settings/applications/new) (use `http://127.0.0.1:3000` as `Authorization callback URL`) into `GITHUB_TOKEN`.
+Setup your GitHub client/secret obtained from the [app page](https://github.com/settings/applications/new) (use `http://localhost:3000` as `Authorization callback URL`) into `GITHUB_TOKEN`.
 
 Setup your MailUp client/secret obtained from the [developers console](http://help.mailup.com/display/mailupapi/Get+a+Developer+Account) into `MAILUP_CLIENT_ID` and `MAILUP_CLIENT_SECRET`.
 

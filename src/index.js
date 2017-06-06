@@ -2,6 +2,7 @@ require('dotenv').config();
 require('./server');
 
 import StatsD from 'statsd-client';
+import bluebird from 'bluebird';
 
 import { github, discourse, mailup } from './services';
 
@@ -22,25 +23,29 @@ Promise.all([
   github.getReposData()
     .then((data) => {
       Object.keys(data).map((key) => {
-        statsd.gauge(`${GITHUB_PREFIX}${key}`, data[key]);
+        statsd.counter(`${GITHUB_PREFIX}${key}`, data[key]);
       });
     }),
 
   discourse.getForumData()
     .then((data) => {
       Object.keys(data).map((key) => {
-        statsd.gauge(`${DISCOURSE_PREFIX}${key}`, data[key]);
+        statsd.counter(`${DISCOURSE_PREFIX}${key}`, data[key]);
       });
     }),
 
   mailup.getMailData()
     .then((data) => {
       Object.keys(data).map((key) => {
-        statsd.gauge(`${MAILUP_PREFIX}${key}`, data[key]);
+        statsd.counter(`${MAILUP_PREFIX}${key}`, data[key]);
       });
     }),
 
 ])
+  .then(() => {
+    // Wait for statsd operations to finish before signalling
+    return bluebird.delay(2000);
+  })
   .then(() => {
     statsd.close();
     process.exit();
