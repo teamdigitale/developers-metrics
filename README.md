@@ -69,3 +69,35 @@ MailUp will require a one-time [authorization code grant](http://help.mailup.com
 $ npm start
 # or yarn start
 ```
+
+
+## Note UmbRos
+
+Su Ubuntu 16lts è necessario seguire i seguenti passi, tutto il resto segue quanto scritto sopra.
+
+### Installazione node
+
+```
+cd ~
+curl -sL https://deb.nodesource.com/setup_6.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
+sudo apt-get install nodejs
+sudo apt-get install build-essential
+```
+
+### Installazione e lancio docker
+
+
+```
+docker pull hopsoft/graphite-statsd
+
+docker run -d\
+ --name graphite\
+ --restart=always\
+ -p 8080:80\
+ -p 2003-2004:2003-2004\
+ -p 2023-2024:2023-2024\
+ -p 8125:8125/udp\
+ -p 8126:8126\
+ hopsoft/graphite-statsd
+```
