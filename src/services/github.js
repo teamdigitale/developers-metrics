@@ -52,7 +52,7 @@ function getAccessToken({ code }) {
     'form': {
       'client_id'     : GITHUB_CLIENT_ID,
       'client_secret' : GITHUB_CLIENT_SECRET,
-      'redirect_uri'  : 'http://127.0.0.1:3000/github',
+      'redirect_uri'  : `${SERVER_URL}/github`,
       'code'          : code,
     }
   });
