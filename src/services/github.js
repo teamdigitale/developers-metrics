@@ -6,9 +6,11 @@ import opn from "opn";
 
 import GitHub from "github-api";
 
-Promise.almost = request =>
+Promise.almost = requests =>
   Promise.all(
-    request.map(promise => (promise.catch ? promise.catch(e => e) : promise))
+    requests.map(
+      promise => (promise.catch ? promise.catch(error => error) : promise)
+    )
   );
 
 const { GITHUB_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
@@ -104,7 +106,7 @@ function getReposDetails(repos) {
     tags.push(repository.listTags(callback));
   });
 
-  return Promise.all([
+  return Promise.almost([
     repos,
     Promise.almost(contributors),
     Promise.almost(branches),
@@ -112,7 +114,9 @@ function getReposDetails(repos) {
     Promise.almost(forks),
     Promise.almost(pullRequests),
     Promise.almost(tags)
-  ]).then(getReposAggregateData);
+  ])
+    .then(getReposAggregateData)
+    .catch(e => {});
 }
 
 function getReposAggregateData([

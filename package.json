@@ -5,10 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon src/index.js --exec babel-node",
-    "dev:export": "NODE_ENV=development nodemon src/index.export.js --exec babel-node",
+    "dev:export": "NODE_ENV=development nodemon src/index.output.js --exec babel-node",
     "build": "babel src -d dist",
     "serve": "node dist/index.js",
-    "serve:export": "node dist/index.export.js",
+    "serve:export": "node dist/index.output.js",
     "prestart": "if [ ! -d node_modules ]; then yarn install; fi",
     "start": "NODE_ENV=production npm run build && npm run serve",
     "start:export": "NODE_ENV=production npm run build && npm run serve:export"
