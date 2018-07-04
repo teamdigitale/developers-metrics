@@ -1,46 +1,42 @@
-require('dotenv').config();
-require('./server');
+require("dotenv").config();
+require("./server");
 
-import StatsD from 'statsd-client';
-import bluebird from 'bluebird';
+import StatsD from "statsd-client";
+import bluebird from "bluebird";
 
-import { github, discourse, mailup } from './services';
+import { github, discourse, mailup } from "./services";
 
 const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
 const { GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX } = process.env;
 const { NODE_ENV } = process.env;
 
-const isDev = (NODE_ENV === 'development');
+const isDev = NODE_ENV === "development";
 
 const statsd = new StatsD({
-  'host'  : STATSD_HOST,
-  'port'  : STATSD_PORT,
-  'prefix': STATSD_PREFIX,
-  'debug' : true,
+  host: STATSD_HOST,
+  port: STATSD_PORT,
+  prefix: STATSD_PREFIX,
+  debug: true
 });
 
 Promise.all([
-  github.getReposData()
-    .then((data) => {
-      Object.keys(data).map((key) => {
-        statsd.counter(`${GITHUB_PREFIX}${key}`, data[key]);
-      });
-    }),
+  github.getReposData().then(data => {
+    Object.keys(data).map(key => {
+      statsd.counter(`${GITHUB_PREFIX}${key}`, data[key]);
+    });
+  }),
 
-  discourse.getForumData()
-    .then((data) => {
-      Object.keys(data).map((key) => {
-        statsd.counter(`${DISCOURSE_PREFIX}${key}`, data[key]);
-      });
-    }),
+  discourse.getForumData().then(data => {
+    Object.keys(data).map(key => {
+      statsd.counter(`${DISCOURSE_PREFIX}${key}`, data[key]);
+    });
+  }),
 
-  mailup.getMailData()
-    .then((data) => {
-      Object.keys(data).map((key) => {
-        statsd.counter(`${MAILUP_PREFIX}${key}`, data[key]);
-      });
-    }),
-
+  mailup.getMailData().then(data => {
+    Object.keys(data).map(key => {
+      statsd.counter(`${MAILUP_PREFIX}${key}`, data[key]);
+    });
+  })
 ])
   .then(() => {
     // Wait for statsd operations to finish before signalling
@@ -50,8 +46,10 @@ Promise.all([
     statsd.close();
     process.exit();
   })
-  .catch((err) => {
+  .catch(err => {
     console.error(`An error occurred: ${err}`);
+    if (isDev && err.stack) console.error(err.stack);
+
     statsd.close();
     process.exit(1);
   });

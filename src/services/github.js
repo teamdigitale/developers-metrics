@@ -6,6 +6,11 @@ import opn from "opn";
 
 import GitHub from "github-api";
 
+Promise.almost = request =>
+  Promise.all(
+    request.map(promise => (promise.catch ? promise.catch(e => e) : promise))
+  );
+
 const { GITHUB_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 const { GITHUB_ACCESS_TOKEN, GITHUB_USER } = process.env;
 const { SERVER_URL, SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
@@ -13,11 +18,9 @@ const { SERVER_URL, SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
 const AUTH_URL = "login/oauth/authorize";
 const TOKEN_URL = "login/oauth/access_token";
 
-const token = {
+const github = new GitHub({
   token: GITHUB_ACCESS_TOKEN
-};
-
-const github = new GitHub(token);
+});
 
 const githubAuth = Promise.defer();
 
@@ -62,10 +65,15 @@ function getReposData() {
 }
 
 function getReposDataWithToken() {
-  return github
-    .getUser(GITHUB_USER)
-    .listRepos()
-    .then(({ data: repos }) => repos)
+  return Promise.all([
+    github.getUser(GITHUB_USER).listRepos(),
+    github.getRateLimit().getRateLimit()
+  ])
+    .then(([{ data: repos }, { data: { resources } }]) => {
+      console.info(`GitHub rate limits:`);
+      console.info(JSON.stringify(resources.core));
+      return repos;
+    })
     .then(getReposDetails);
 }
 
@@ -77,26 +85,33 @@ function getReposDetails(repos) {
   const pullRequests = [];
   const tags = [];
 
+  const callback = (error, result, request) => {
+    if (error) {
+      return { data: [] };
+    }
+    return result;
+  };
+
   repos.map(repo => {
     const repository = github.getRepo(GITHUB_USER, repo.name);
     const fullname = `${GITHUB_USER}/${repo.name}`;
 
-    contributors.push(repository.getContributors());
-    branches.push(repository.listBranches());
-    commits.push(repository.listCommits());
-    forks.push(repository.listForks());
-    pullRequests.push(repository.listPullRequests());
-    tags.push(repository.listTags());
+    contributors.push(repository.getContributors(callback));
+    branches.push(repository.listBranches(callback));
+    commits.push(repository.listCommits({}, callback));
+    forks.push(repository.listForks(callback));
+    pullRequests.push(repository.listPullRequests({}, callback));
+    tags.push(repository.listTags(callback));
   });
 
   return Promise.all([
     repos,
-    Promise.all(contributors),
-    Promise.all(branches),
-    Promise.all(commits),
-    Promise.all(forks),
-    Promise.all(pullRequests),
-    Promise.all(tags)
+    Promise.almost(contributors),
+    Promise.almost(branches),
+    Promise.almost(commits),
+    Promise.almost(forks),
+    Promise.almost(pullRequests),
+    Promise.almost(tags)
   ]).then(getReposAggregateData);
 }
 
