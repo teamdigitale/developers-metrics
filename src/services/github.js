@@ -5,13 +5,22 @@ import querystring from "querystring";
 import opn from "opn";
 
 import GitHub from "github-api";
+import bluebird from "bluebird";
 
-Promise.almost = requests =>
-  Promise.all(
-    requests.map(
-      promise => (promise.catch ? promise.catch(error => error) : promise)
-    )
-  );
+const resolvePromise = promise =>
+  new Promise((resolve /*, reject */) => {
+    promise
+      .then(result => {
+        resolve({
+          data: result && result.data ? result.data : []
+        });
+      })
+      .catch(error => {
+        resolve({
+          data: []
+        });
+      });
+  });
 
 const { GITHUB_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 const { GITHUB_ACCESS_TOKEN, GITHUB_USER } = process.env;
@@ -87,36 +96,32 @@ function getReposDetails(repos) {
   const pullRequests = [];
   const tags = [];
 
-  const callback = (error, result, request) => {
-    if (error) {
-      return { data: [] };
-    }
-    return result;
+  const callback = (result, index, length) => {
+    return { data: result.data };
   };
 
   repos.map(repo => {
     const repository = github.getRepo(GITHUB_USER, repo.name);
     const fullname = `${GITHUB_USER}/${repo.name}`;
 
-    contributors.push(repository.getContributors(callback));
-    branches.push(repository.listBranches(callback));
-    commits.push(repository.listCommits({}, callback));
-    forks.push(repository.listForks(callback));
-    pullRequests.push(repository.listPullRequests({}, callback));
-    tags.push(repository.listTags(callback));
+    contributors.push(resolvePromise(repository.getContributors()));
+    branches.push(resolvePromise(repository.listBranches()));
+    commits.push(resolvePromise(repository.listCommits()));
+    forks.push(resolvePromise(repository.listForks()));
+    pullRequests.push(resolvePromise(repository.listPullRequests()));
+    tags.push(resolvePromise(repository.listTags()));
   });
 
-  return Promise.almost([
+  return Promise.all([
     repos,
-    Promise.almost(contributors),
-    Promise.almost(branches),
-    Promise.almost(commits),
-    Promise.almost(forks),
-    Promise.almost(pullRequests),
-    Promise.almost(tags)
+    bluebird.map(contributors, callback, { concurrency: 5 }),
+    bluebird.map(branches, callback, { concurrency: 5 }),
+    bluebird.map(commits, callback, { concurrency: 5 }),
+    bluebird.map(forks, callback, { concurrency: 5 }),
+    bluebird.map(pullRequests, callback, { concurrency: 5 }),
+    bluebird.map(tags, callback, { concurrency: 5 })
   ])
-    .then(getReposAggregateData)
-    .catch(e => {});
+    .then(getReposAggregateData);
 }
 
 function getReposAggregateData([

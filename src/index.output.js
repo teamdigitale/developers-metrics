@@ -26,13 +26,15 @@ Promise.all([
     results.map((result, i) => {
       const time = new Date().toISOString();
 
-      Object.keys(result).map(key => {
-        metrics.push({
-          metric: `${PREFIXES[i]}${key}`,
-          time,
-          value: result[key]
+      if (result) {
+        Object.keys(result).map(key => {
+          metrics.push({
+            metric: `${PREFIXES[i]}${key}`,
+            time,
+            value: result[key]
+          });
         });
-      });
+      }
     });
 
     return metrics;
