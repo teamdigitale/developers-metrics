@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const { DISCOURSE_URL } = process.env;
 
-import request from 'request-promise-native';
+const request = require('request-promise-native');
 
 function get({ endpoint }) {
   return request({

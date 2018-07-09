@@ -1,9 +1,9 @@
-import github from './github';
-import discourse from './discourse';
-import mailup from './mailup';
+const github = require("./github");
+const discourse = require("./discourse");
+const mailup = require("./mailup");
 
 module.exports = {
   github,
   discourse,
-  mailup,
+  mailup
 };

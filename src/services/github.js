@@ -1,11 +1,11 @@
 require("dotenv").config();
 
-import request from "request-promise-native";
-import querystring from "querystring";
-import opn from "opn";
+const request = require("request-promise-native");
+const querystring = require("querystring");
+const opn = require("opn");
 
-import GitHub from "github-api";
-import bluebird from "bluebird";
+const GitHub = require("github-api");
+const bluebird = require("bluebird");
 
 const resolvePromise = promise =>
   new Promise((resolve /*, reject */) => {

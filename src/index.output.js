@@ -1,11 +1,11 @@
 require("dotenv").config();
 require("./server");
 
-import fs from "fs";
+const fs = require("fs");
 
-import { unparse } from "papaparse";
+const { unparse } = require("papaparse");
 
-import { github, discourse, mailup } from "./services";
+const { github, discourse, mailup } = require("./services");
 
 const { GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX } = process.env;
 const { NODE_ENV } = process.env;

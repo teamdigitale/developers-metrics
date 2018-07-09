@@ -1,10 +1,10 @@
 require("dotenv").config();
 
-import fs from "fs";
+const fs = require("fs");
 
-import { InfluxDB } from "influx";
-import { unparse } from "papaparse";
-import Client from "ssh2-sftp-client";
+const { InfluxDB } = require("influx");
+const { unparse } = require("papaparse");
+const Client = require("ssh2-sftp-client");
 
 const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
 const { GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX } = process.env;

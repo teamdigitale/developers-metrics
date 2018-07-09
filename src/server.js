@@ -1,12 +1,12 @@
 require("dotenv").config();
 
-import express from "express";
-import request from "request-promise-native";
-import querystring from "querystring";
-import fs from "fs";
+const express = require("express");
+const request = require("request-promise-native");
+const querystring = require("querystring");
+const fs = require("fs");
 
-import { mailupAuth, getAccessRefreshToken } from "./services/mailup";
-import { githubAuth, getAccessToken } from "./services/github";
+const { mailupAuth, getAccessRefreshToken } = require("./services/mailup");
+const { githubAuth, getAccessToken } = require("./services/github");
 
 const { SERVER_PORT } = process.env;
 

@@ -1,10 +1,10 @@
 require("dotenv").config();
 require("./server");
 
-import StatsD from "statsd-client";
-import bluebird from "bluebird";
+const StatsD = require("statsd-client");
+const bluebird = require("bluebird");
 
-import { github, discourse, mailup } from "./services";
+const { github, discourse, mailup } = require("./services");
 
 const { STATSD_HOST, STATSD_PORT, STATSD_PREFIX } = process.env;
 const { GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX } = process.env;
