@@ -103,7 +103,7 @@ Promise.all(promises)
       })
       .then(() => {
         return sftp.put(LOCAL_PATH + fileName, REMOTE_PATH + fileName);
-      })
+      });
   });
 
 const writeFile = (path, data, opts = "utf8") => {

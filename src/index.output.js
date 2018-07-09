@@ -3,6 +3,7 @@ require("./server");
 
 const fs = require("fs");
 
+const bluebird = require("bluebird");
 const { unparse } = require("papaparse");
 
 const { github, discourse, mailup } = require("./services");
@@ -15,11 +16,11 @@ const isDev = NODE_ENV === "development";
 const PREFIXES = [GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX];
 const LOCAL_PATH = `./export/`;
 
-Promise.all([
-  github.getReposData(),
-  discourse.getForumData(),
-  mailup.getMailData()
-])
+bluebird
+  .each(
+    [github.getReposData(), discourse.getForumData(), mailup.getMailData()],
+    result => result
+  )
   .then(results => {
     const metrics = [];
 
