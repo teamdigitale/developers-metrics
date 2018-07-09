@@ -12,12 +12,14 @@ const resolvePromise = promise =>
     promise
       .then(result => {
         resolve({
-          data: result && result.data ? result.data : []
+          data: result && result.data ? result.data : [],
+          errored: []
         });
       })
       .catch(error => {
         resolve({
-          data: []
+          data: [],
+          errored: [error]
         });
       });
   });
@@ -77,7 +79,7 @@ function getReposData() {
 
 function getReposDataWithToken() {
   return Promise.all([
-    github.getUser(GITHUB_USER).listRepos(),
+    github.getOrganization(GITHUB_USER).getRepos(),
     github.getRateLimit().getRateLimit()
   ])
     .then(([{ data: repos }, { data: { resources } }]) => {
@@ -97,10 +99,17 @@ function getReposDetails(repos) {
   const tags = [];
 
   const callback = (result, index, length) => {
-    return { data: result.data };
+    return {
+      data: result.data,
+      errored: result.errored
+    };
   };
 
-  repos.map(repo => {
+  console.info(`Repositories (including forks): ${repos.length}`);
+  const originals = repos.filter(repo => !repo.fork);
+  console.info(`Repositories (not including forks): ${originals.length}`);
+
+  originals.map(repo => {
     const repository = github.getRepo(GITHUB_USER, repo.name);
     const fullname = `${GITHUB_USER}/${repo.name}`;
 
@@ -108,20 +117,26 @@ function getReposDetails(repos) {
     branches.push(resolvePromise(repository.listBranches()));
     commits.push(resolvePromise(repository.listCommits()));
     forks.push(resolvePromise(repository.listForks()));
-    pullRequests.push(resolvePromise(repository.listPullRequests()));
+    pullRequests.push(
+      resolvePromise(
+        repository.listPullRequests({
+          // https://developer.github.com/v3/pulls/#list-pull-requests
+          state: "all"
+        })
+      )
+    );
     tags.push(resolvePromise(repository.listTags()));
   });
 
   return Promise.all([
-    repos,
-    bluebird.map(contributors, callback, { concurrency: 5 }),
-    bluebird.map(branches, callback, { concurrency: 5 }),
-    bluebird.map(commits, callback, { concurrency: 5 }),
-    bluebird.map(forks, callback, { concurrency: 5 }),
-    bluebird.map(pullRequests, callback, { concurrency: 5 }),
-    bluebird.map(tags, callback, { concurrency: 5 })
-  ])
-    .then(getReposAggregateData);
+    originals,
+    bluebird.map(contributors, callback, { concurrency: 1 }),
+    bluebird.map(branches, callback, { concurrency: 1 }),
+    bluebird.map(commits, callback, { concurrency: 1 }),
+    bluebird.map(forks, callback, { concurrency: 1 }),
+    bluebird.map(pullRequests, callback, { concurrency: 1 }),
+    bluebird.map(tags, callback, { concurrency: 1 })
+  ]).then(getReposAggregateData);
 }
 
 function getReposAggregateData([
@@ -134,6 +149,17 @@ function getReposAggregateData([
   tags,
   gql
 ]) {
+  console.info({
+    errors: {
+      contributors: contributors.reduce(accumulateErroredLength, 0),
+      branches: branches.reduce(accumulateErroredLength, 0),
+      commits: commits.reduce(accumulateErroredLength, 0),
+      forks: forks.reduce(accumulateErroredLength, 0),
+      pullRequests: pullRequests.reduce(accumulateErroredLength, 0),
+      tags: tags.reduce(accumulateErroredLength, 0)
+    }
+  });
+
   return {
     repos: repos.length,
     contributors: contributors.reduce(accumulateDataLength, 0),
@@ -147,6 +173,10 @@ function getReposAggregateData([
 
 function accumulateDataLength(acc, object) {
   return acc + (object && object.data ? object.data.length : 0);
+}
+
+function accumulateErroredLength(acc, object) {
+  return acc + (object && object.errored ? object.errored.length : 0);
 }
 
 module.exports = {
