@@ -7,6 +7,7 @@
     "dev": "NODE_ENV=development nodemon src/index.js --exec babel-node",
     "dev:export": "NODE_ENV=development nodemon src/index.output.js --exec babel-node",
     "build": "babel src --out-dir dist",
+    "build:export:binaries": "NODE_ENV=production npm run build && npx pkg -t node6-linux dist/index.output.js",
     "serve": "node dist/index.js",
     "serve:export": "node dist/index.output.js",
     "prestart": "if [ ! -d node_modules ]; then yarn install; fi",
