@@ -1,9 +1,9 @@
 require("dotenv").config();
 
+const fs = require("fs");
 const request = require("request-promise-native");
 const querystring = require("querystring");
-const opn = require("opn");
-const fs = require("fs");
+// const opn = require("opn");
 const bluebird = require("bluebird");
 
 const readFile = bluebird.promisify(fs.readFile);
@@ -30,7 +30,7 @@ function checkAuth(endpoint = LOGON_URL) {
     });
 
     // Try to open into a Browser
-    opn(`${MAILUP_URL}/${endpoint}?${qs}`);
+    // opn(`${MAILUP_URL}/${endpoint}?${qs}`);
 
     console.info("Visit this URL in order to obtain your access token:");
     console.info(`${MAILUP_URL}/${endpoint}?${qs}`);

@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const request = require("request-promise-native");
 const querystring = require("querystring");
-const opn = require("opn");
+// const opn = require("opn");
 
 const GitHub = require("github-api");
 const bluebird = require("bluebird");
@@ -26,7 +26,7 @@ const resolvePromise = promise =>
 
 const { GITHUB_URL, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env;
 const { GITHUB_ACCESS_TOKEN, GITHUB_USER } = process.env;
-const { SERVER_URL, SERVER_PORT, REFRESH_TOKEN_PATH } = process.env;
+const { SERVER_URL, SERVER_PORT } = process.env;
 
 const AUTH_URL = "login/oauth/authorize";
 const TOKEN_URL = "login/oauth/access_token";
@@ -47,7 +47,7 @@ function checkAuth(endpoint = AUTH_URL) {
     });
 
     // Try to open into a Browser
-    opn(`${GITHUB_URL}/${endpoint}?${qs}`);
+    // opn(`${GITHUB_URL}/${endpoint}?${qs}`);
 
     console.info("Visit this URL in order to obtain your access token:");
     console.info(`${GITHUB_URL}/${endpoint}?${qs}`);

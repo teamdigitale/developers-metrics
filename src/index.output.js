@@ -1,5 +1,4 @@
 require("dotenv").config();
-require("./server");
 
 const fs = require("fs");
 
