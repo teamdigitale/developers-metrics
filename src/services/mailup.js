@@ -133,7 +133,7 @@ function getListsRecipients([listsData, access_token]) {
   });
 
   return Promise.all([
-    listsItems,
+    listsData,
     Promise.all(pending),
     Promise.all(subscribed),
     Promise.all(unsubscribed),
@@ -155,15 +155,15 @@ function getMailDataWithRefreshToken() {
 
 function getMailAggregateData([lists, pending, subscribed, unsubscribed]) {
   return {
-    lists: lists.length,
-    pending: pending.reduce(accumulateItemsLength, 0),
-    subscribed: subscribed.reduce(accumulateItemsLength, 0),
-    unsubscribed: unsubscribed.reduce(accumulateItemsLength, 0)
+    lists: lists.TotalElementsCount,
+    pending: pending.reduce(accumulateTotalElementsCount, 0),
+    subscribed: subscribed.reduce(accumulateTotalElementsCount, 0),
+    unsubscribed: unsubscribed.reduce(accumulateTotalElementsCount, 0)
   };
 }
 
-function accumulateItemsLength(acc, object) {
-  return acc + object.Items.length;
+function accumulateTotalElementsCount(acc, object) {
+  return acc + object.TotalElementsCount;
 }
 
 module.exports = {
