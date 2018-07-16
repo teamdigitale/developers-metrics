@@ -15,6 +15,22 @@ const isDev = NODE_ENV === "development";
 const PREFIXES = [GITHUB_PREFIX, DISCOURSE_PREFIX, MAILUP_PREFIX];
 const LOCAL_PATH = `./export/`;
 
+const getFormattedTime = () => {
+  const pad = number => {
+    if (number < 10) {
+      return "0" + number;
+    }
+    return number;
+  };
+
+  const date = new Date();
+  return [
+    date.getUTCFullYear(),
+    pad(date.getUTCMonth() + 1),
+    pad(date.getUTCDate())
+  ].join("-");
+};
+
 bluebird
   .each(
     [github.getReposData(), discourse.getForumData(), mailup.getMailData()],
@@ -23,13 +39,15 @@ bluebird
   .then(results => {
     const metrics = [];
 
-    results.map((result, i) => {
-      const time = new Date().toISOString();
+    const time = getFormattedTime();
 
+    results.map((result, i) => {
       if (result) {
+        const prefix = PREFIXES[i];
         Object.keys(result).map(key => {
           metrics.push({
-            metric: `${PREFIXES[i]}${key}`,
+            group: prefix.replace("-", ""),
+            metric: `${prefix}${key}`,
             time,
             value: result[key]
           });
