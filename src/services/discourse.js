@@ -40,15 +40,13 @@ const paginate = async ({ endpoint, page = 0, data = [] }) => {
 function getForumData() {
   return Promise.all([
     get({ endpoint: "categories.json" }),
-    paginate({
-      endpoint: "directory_items.json?period=all"
-    })
+    get({ endpoint: "directory_items.json?period=all" })
   ]).then(getForumAggregateData);
 }
 
 function getForumAggregateData([categoriesData, usersData]) {
   const categories = categoriesData.category_list.categories;
-  const users = usersData.directory_items;
+  const users = usersData.total_rows_directory_items;
 
   return {
     categories: categories.length,
@@ -58,7 +56,7 @@ function getForumAggregateData([categoriesData, usersData]) {
     posts: categories
       .map(category => category.post_count)
       .reduce(accumulateCount, 0),
-    users: users.length
+    users: users
   };
 }
 
